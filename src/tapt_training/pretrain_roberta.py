@@ -8,8 +8,7 @@ os.environ["WANDB_DISABLED"] = "true"
 
 dataset_name = exp_configs.task_name
 original_model_path = exp_configs.model_name_or_path
-trained_model_path = f'/{exp_configs.model_class}_base_{dataset_name}'
-savedir = exp_configs.savedir
+savedir = exp_configs.MODEL_DIR + f'/pretrained_models/{exp_configs.model_class}_base_{dataset_name}_tapt'
 debug_mode = exp_configs.debug_mode
 
 tokenizer = load_tokenizer(model_str=exp_configs.model_class)

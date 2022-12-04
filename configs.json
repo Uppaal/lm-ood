@@ -4,10 +4,8 @@
     "root_path": "/u/u/p/uppaal/Code/pretrained-models-for-ood-detection/src",
     "task_name": "20newsgroups",
     "ood_datasets": "['rte', '20newsgroups']",
-    "samples_to_keep": 5,
     "model_class": "roberta",
     "do_train": false,
-    "num_train_epochs": 1,
-    "debug_mode": true,
-    "CUDA_VISIBLE_DEVICES": 7
+    "num_train_epochs": 10,
+    "CUDA_VISIBLE_DEVICES": 0
 }
