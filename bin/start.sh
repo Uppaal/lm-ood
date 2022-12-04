@@ -1,3 +1,0 @@
-export CODE_ROOT=`pwd`
-export PYTHONPATH=$CODE_ROOT:$PYTHONPATH
-cd src
