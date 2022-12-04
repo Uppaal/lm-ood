@@ -22,7 +22,6 @@ class Map(object): pass
 
 exp_configs = Config()
 exp_configs.values()
-os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 os.environ["CUDA_VISIBLE_DEVICES"] = str(exp_configs.CUDA_VISIBLE_DEVICES)
 logger.info(f'Host: {socket.gethostname()}')
