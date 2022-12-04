@@ -49,7 +49,7 @@ After the new model has been saved to the `pretrained_models` directory within t
 ## Open Points to Address:
 1. Add citations once paper is on arxiv, then make repo public
 2. How to share datasets for reproducaibility? Files too heavy for github.  
-
+3. Test refactored versions of umap and tapt
 
 
 
