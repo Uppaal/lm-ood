@@ -1,3 +1,15 @@
+.idea/*
+__pycache__*
+dataset/id_data/*
+dataset/ood_data/*
+checkpoints
+finetune_restlts*/
+op*.txt
+models/*
+plots/*
+logs/*
+temp_outputs/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
