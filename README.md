@@ -56,7 +56,7 @@ After the new model has been saved to the `pretrained_models` directory within t
 ---
 ## Citation
 
-If you find this repo helpful, welcome to cite our work:
+If you find this repo helpful, you are welcome to cite our work:
 ```
 (TODO: Add citation once on arxiv)
 ```
