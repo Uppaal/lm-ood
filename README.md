@@ -46,19 +46,22 @@ After the new model has been saved to the `pretrained_models` directory within t
 
 ---
 
-## TODO: 
+<!-- ## TODO: 
 1. Add citations once paper is on arxiv, then make repo public
 2. How to share datasets for reproducaibility? Files too heavy for github.  
-<!-- 3. Test refactored versions of umap and tapt -->
-
-
+3. Test refactored versions of umap and tapt -->
 
 ---
 ## Citation
 
 If you find this repo helpful, you are welcome to cite our work:
 ```
-(TODO: Add citation once on arxiv)
+ @inproceedings{uppaal2023fine,
+      title={Is Fine-tuning Needed? Pre-trained Language Models Are Near Perfect for Out-of-Domain Detection}, 
+      author={Rheeya Uppaal and Junjie Hu and Yixuan Li },
+      booktitle = {Annual Meeting of the Association for Computational Linguistics},
+      year = {2023}
+}
 ```
 Our codebase borrows from the following:
 
