@@ -1,6 +1,6 @@
 # Tuning Free OOD Detection
 
-This repository contains the official code for the paper "Is Fine-tuning Needed? Pre-trained Language Models Are Near Perfect for Out-of-Domain Detection". (TODO: Add link once on arxiv)
+This repository contains the official code for the paper [Is Fine-tuning Needed? Pre-trained Language Models Are Near Perfect for Out-of-Domain Detection](https://aclanthology.org/2023.acl-long.717/) (ACL 2023).
 
 ---
 
@@ -57,12 +57,25 @@ After the new model has been saved to the `pretrained_models` directory within t
 ## Citation
 
 If you find this repo helpful, you are welcome to cite our work:
-```
- @inproceedings{uppaal2023fine,
+<--@inproceedings{uppaal2023fine,
       title={Is Fine-tuning Needed? Pre-trained Language Models Are Near Perfect for Out-of-Domain Detection}, 
       author={Rheeya Uppaal and Junjie Hu and Yixuan Li },
       booktitle = {Annual Meeting of the Association for Computational Linguistics},
       year = {2023}
+}-->
+```
+@inproceedings{uppaal-etal-2023-fine,
+    title = "Is Fine-tuning Needed? Pre-trained Language Models Are Near Perfect for Out-of-Domain Detection",
+    author = "Uppaal, Rheeya  and Hu, Junjie  and Li, Yixuan",
+    editor = "Rogers, Anna  and Boyd-Graber, Jordan  and Okazaki, Naoaki",
+    booktitle = "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = jul,
+    year = "2023",
+    address = "Toronto, Canada",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.acl-long.717",
+    doi = "10.18653/v1/2023.acl-long.717",
+    pages = "12813--12832",
 }
 ```
 Our codebase borrows from the following:
