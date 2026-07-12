@@ -2,67 +2,76 @@
 
 This repository contains the official code for the paper [Is Fine-tuning Needed? Pre-trained Language Models Are Near Perfect for Out-of-Domain Detection](https://aclanthology.org/2023.acl-long.717/) (ACL 2023).
 
----
+_Update July 2026:_ This codebase was recently updated to make it easier to install and run. Those updates may cause small differences from the exact numbers reported in the paper, but the trends and findings remain the same, and observed numerical changes have been minor.
 
 ## Setup
 
-First, create a virtual environment for the project (we use Conda to create a python 3.9 environment) and install all the requirments using `requirements.txt`.
-1. `conda create -n ood_det python==3.9`
-2. `conda activate ood_det`
-3. `pip install -r requirements.txt`
+Create a Python 3.9 environment, and install the required packages by running `pip install -r requirements.txt`.
 
-Now, create two directories:
-1. Data directory
-2. Model directory - create two subdirectories: `pretrained_models` and `finetuned_models`
-
-Both directories can be located anywhere but should be specified in `config.py` (See more below).
-
----
-## Running Experiments
-
-At the start of each session, run the following: `. bin/start.sh`
-
-### Running OOD Detection on a Model
-
-Directory paths and training arguments can be specified in `config.py`. Some important arguments are:
+Next, fill the required values in `configs.yaml`. Some important arguments are:
 - `DATA_DIR`: Path to the data directory
-- `MODEL_DIR`: Path to the model directory
+- `MODEL_DIR`: Path to the model directory; all trained checkpoints are saved here.
 - `task_name`: Name of the dataset to use as in-distribution (ID) data.
 - `ood_datasets`: List of datasets to use as out-of-distribution (OOD) data.
-- `model_class`: Type of model to use. Options are `roberta`, `gpt2`and `t5` (base versions of all models used).
+- `model_class`: Type of model to use. Options are `roberta`, `gpt2`, and `t5`.
+- `model_path`: Required local checkpoint path.
 - `do_train`: If true, trains the model on the ID data before performing OOD detection.
 
-After specifying the arguments, run the following command:
-`python run_ood_detection.py`
+With `do_train: false`, OOD detection runs directly on `model_path`. With `do_train: true`, training starts from `model_path`, saves to `MODEL_DIR/finetuned_models/{model_class}_base_{task_name}`, and OOD detection runs on the in-memory fine-tuned model.
+
+When `do_train: true`, `run_ood_detection.py` uses a weighted sum of cross-entropy and contrastive loss:
+```yaml
+# CE-only fine-tuning
+cross_entropy_weight: 1.0
+contrastive_weight: 0.0
+
+# CE + SupCon fine-tuning
+cross_entropy_weight: 1.0
+contrastive_weight: 2.0
+contrastive_loss: supcon
+
+# SupCon-only fine-tuning
+cross_entropy_weight: 0.0
+contrastive_weight: 1.0
+contrastive_loss: supcon
+```
+`tau` controls the SupCon temperature. These loss settings apply to `run_ood_detection.py`, not the TAPT scripts.
 
 
-### Training a Model through TAPT
+Finally, run the following script to create your data and model directories, and download pretrained models for evaluation (`roberta_base`, `gpt2_base`, and `t5_base`). 
+```bash
+python download_models.py
+```
 
-Running the command below will extend the pretraining process on a specified dataset.
-Once again, the values in `config.json` can be used to specify the dataset and model to be used.
-`python tapt_training/pretrain_roberta.py`
 
-After the new model has been saved to the `pretrained_models` directory within the `MODELS_DIR` directory (specified in `config.py`), it can be used for OOD detection by running `run_ood_detection.py`.
+## Running OOD Detection on a Model
+
+```bash
+python run_ood_detection.py
+```
+
+
+## Training a Model through TAPT
+
+TAPT is a two-step process: first run masked language modeling on the ID data, then run supervised cross-entropy fine-tuning from that TAPT checkpoint.
+
+The first stage of training stores a checkpoint in `MODEL_DIR/pretrained_models/{model_class}_base_{task_name}_tapt`.
+```bash
+python tapt_training/pretrain_roberta.py
+```
+
+The second stage loads that TAPT checkpoint and saves the final classifier to `MODEL_DIR/finetuned_models/{model_class}_base_{task_name}`.
+```
+python tapt_training/finetune_roberta.py
+```
+
+For evaluation, set `model_path` in `config.yaml` to the final classifier checkpoint before running `run_ood_detection.py`.
 
 ---
-
-<!--
- ## TODO: 
-1. Add citations once paper is on arxiv, then make repo public
-2. How to share datasets for reproducaibility? Files too heavy for github.  
-3. Test refactored versions of umap and tapt 
---- 
--->
 
 ## Citation
 
 If you find this repo helpful, you are welcome to cite our work:
-<--@inproceedings{uppaal2023fine,
-      title={Is Fine-tuning Needed? Pre-trained Language Models Are Near Perfect for Out-of-Domain Detection}, 
-      author={Rheeya Uppaal and Junjie Hu and Yixuan Li },
-      booktitle = {Annual Meeting of the Association for Computational Linguistics},
-      year = {2023}
-}-->
 ```
 @inproceedings{uppaal-etal-2023-fine,
     title = "Is Fine-tuning Needed? Pre-trained Language Models Are Near Perfect for Out-of-Domain Detection",

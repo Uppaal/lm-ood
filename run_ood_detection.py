@@ -1,4 +1,3 @@
-import ast
 import torch
 import warnings
 import numpy as np
@@ -8,11 +7,11 @@ from transformers import RobertaConfig, GPT2Config, T5Config
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
-from src.evaluation import evaluate_ood
-from src.utils.dataset_utils import DatasetUtil
-from src.utils.model_utils import load_tokenizer
-from src.utils.startup import set_seed, collate_fn, logger, exp_configs
-from src.model import RobertaForSequenceClassification, GPT2ForSequenceClassification, T5ForSequenceClassification, prepare_ood
+from evaluation import evaluate_ood
+from utils.dataset_utils import DatasetUtil
+from utils.model_utils import load_tokenizer
+from utils.startup import collate_fn, logger, exp_configs
+from model import RobertaForSequenceClassification, GPT2ForSequenceClassification, T5ForSequenceClassification, prepare_ood
 
 warnings.filterwarnings("ignore")
 
@@ -33,6 +32,27 @@ task_to_metric = {
 }
 
 
+def describe_training_method(args):
+    methods = []
+    if args.cross_entropy_weight > 0:
+        methods.append('CE')
+    if args.contrastive_weight > 0:
+        methods.append(args.contrastive_loss)
+
+    if not methods:
+        return 'none'
+    if args.linear_probe:
+        methods.append('linear probe')
+    return ' + '.join(methods)
+
+
+def print_model_save_details(save_path, dataset_name, training_method):
+    print('Model saved.')
+    print(f'  path: {save_path}')
+    print(f'  training dataset: {dataset_name}')
+    print(f'  training method: {training_method}')
+
+
 def train(args, model, train_dataset, dev_dataset, test_dataset, benchmarks):
 
     def detect_ood():
@@ -49,7 +69,19 @@ def train(args, model, train_dataset, dev_dataset, test_dataset, benchmarks):
             torch.cuda.empty_cache()
 
 
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, collate_fn=collate_fn, shuffle=True, drop_last=True)
+    train_generator = None
+    if args.set_seed:
+        train_generator = torch.Generator()
+        train_generator.manual_seed(args.seed)
+
+    train_dataloader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=args.batch_size,
+        collate_fn=collate_fn,
+        shuffle=True,
+        drop_last=True,
+        generator=train_generator,
+    )
     dev_dataloader = torch.utils.data.DataLoader(dev_dataset, batch_size=args.batch_size, collate_fn=collate_fn)
     test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, collate_fn=collate_fn)
 
@@ -100,13 +132,14 @@ def train(args, model, train_dataset, dev_dataset, test_dataset, benchmarks):
                 results = evaluate(args, model, dev_dataloader, tag="test")
                 logger.info(results)
                 detect_ood()
-                model.save_pretrained(f'{args.savedir}_epoch-{epoch}')
-                logger.info('\nSaving model...')
+                epoch_savedir = f'{args.savedir}_epoch-{epoch}'
+                model.save_pretrained(epoch_savedir)
+                print_model_save_details(epoch_savedir, args.task_name, describe_training_method(args))
 
         if not args.epoch_wise_eval:
             logger.info('Training complete. Saving model...')
             model.save_pretrained(args.savedir)
-            logger.info('Model saved.')
+            print_model_save_details(args.savedir, args.task_name, describe_training_method(args))
 
     if not args.epoch_wise_eval:
         results = evaluate(args, model, dev_dataloader, tag="dev")
@@ -152,23 +185,20 @@ def evaluate(args, model, dataloader, tag="train"):
 
 
 def main(args):
-    if exp_configs.set_seed:
-        set_seed(args)
-
     num_labels = task_to_labels[args.task_name]
-    tokenizer = load_tokenizer(model_str=args.model_class)
+    tokenizer = load_tokenizer(model_path=args.model_path, model_str=args.model_class)
 
     # Load model config
     if args.model_class == 'roberta':
-        config = RobertaConfig.from_pretrained(args.model_name_or_path, num_labels=num_labels)
+        config = RobertaConfig.from_pretrained(args.model_path, num_labels=num_labels)
     elif args.model_class == 'gpt2':
-        config = GPT2Config.from_pretrained(args.model_name_or_path, num_labels=num_labels)
+        config = GPT2Config.from_pretrained(args.model_path, num_labels=num_labels)
         config.pad_token_id = config.eos_token_id
         config.use_cache = False
         config.hidden_size = config.n_embd
         config.hidden_dropout_prob = 0.1
     elif args.model_class == 't5':
-        config = T5Config.from_pretrained(args.model_name_or_path, num_labels=num_labels)
+        config = T5Config.from_pretrained(args.model_path, num_labels=num_labels)
         config.hidden_size = config.d_model
         config.hidden_dropout_prob = config.dropout_rate
 
@@ -183,16 +213,16 @@ def main(args):
 
     # Load model
     if args.model_class == 'roberta':
-        model = RobertaForSequenceClassification.from_pretrained(args.model_name_or_path, config=config)
+        model = RobertaForSequenceClassification.from_pretrained(args.model_path, config=config)
     elif args.model_class == 'gpt2':
-        model = GPT2ForSequenceClassification.from_pretrained(args.model_name_or_path, config=config)
+        model = GPT2ForSequenceClassification.from_pretrained(args.model_path, config=config)
     elif args.model_class == 't5':
-        model = T5ForSequenceClassification.from_pretrained(args.model_name_or_path, config=config)
+        model = T5ForSequenceClassification.from_pretrained(args.model_path, config=config)
     model.to(exp_configs.device)
     logger.info(f'Loaded model. Trainable params: {sum(p.numel() for p in model.parameters() if p.requires_grad)}')
 
 
-    datasets = ast.literal_eval(args.ood_datasets)
+    datasets = args.ood_datasets
     benchmarks = ()
 
     def process_dataset_split(dataset_split):

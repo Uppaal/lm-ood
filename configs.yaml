@@ -1,0 +1,65 @@
+# Filesystem paths. Relative paths are resolved from the repository root.
+paths:
+  # Directory for pretrained and fine-tuned model checkpoints.
+  MODEL_DIR: checkpoints
+  # Directory for datasets and Hugging Face dataset cache.
+  DATA_DIR: data
+  # Directory for temporary trainer outputs and saved embeddings.
+  temp_output_dir: temp_outputs
+
+# Reproducibility and runtime settings.
+runtime:
+  set_seed: true
+  seed: 42
+  # CUDA device ID to expose to the process.
+  CUDA_VISIBLE_DEVICES: 0
+  debug_mode: false
+
+# Model checkpoint and representation settings.
+model:
+  # Currently supported values in the code are roberta, gpt2, and t5.
+  model_class: roberta
+  # Required local Hugging Face checkpoint directory.
+  model_path: checkpoints/pretrained_models/roberta_base
+  max_seq_length: 256
+  # Sentence embedding pooling mode: average or cls.
+  sentence_embedding: average
+  # OOD representation source: classifier_input or penultimate_layer.
+  layer_representation_for_ood: classifier_input
+
+# Dataset settings.
+datasets:
+  # In-distribution task. Valid options are '20newsgroups' 'imdb' 'news-category-modified'
+  task_name: 20newsgroups
+  # Must include task_name, plus any OOD datasets to evaluate.
+  # Valid options are 'sst2', '20newsgroups', 'rte', 'mnli', 'imdb', 'multi30k', 'news-category-modified', 'clinc150'
+  ood_datasets:
+    - rte
+    - 20newsgroups
+  # Optional cap on samples per split. Use null for all samples.
+  samples_to_keep: null
+
+# Fine-tuning settings used when do_train is true.
+training:
+  do_train: false
+  num_train_epochs: 10
+  linear_probe: false
+  epoch_wise_eval: false
+  batch_size: 4
+  learning_rate: 0.00001
+  adam_epsilon: 0.00000001
+  warmup_ratio: 0.0
+  weight_decay: 0.01
+
+# Training loss settings.
+loss:
+  contrastive_weight: 2.0
+  cross_entropy_weight: 1.0
+  # Contrastive loss mode: supcon or margin.
+  contrastive_loss: supcon
+  # Temperature for SupCon.
+  tau: 0.3
+
+# Metric reporting settings.
+evaluation:
+  report_all_metrics: false

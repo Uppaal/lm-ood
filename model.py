@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch.nn import CrossEntropyLoss, MSELoss
 from sklearn.covariance import EmpiricalCovariance
 from transformers import BertPreTrainedModel, RobertaModel, GPT2Model, GPT2PreTrainedModel, T5PreTrainedModel, T5EncoderModel
-from src.utils.startup import exp_configs
+from utils.startup import exp_configs
 
 
 def get_sent_embeddings(model,  input_ids, attention_mask):

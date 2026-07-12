@@ -1,17 +1,18 @@
 import torch
 import numpy as np
-from src.utils.startup import exp_configs
+from utils.startup import exp_configs
 
 device = exp_configs.device
 
 
 def MMD(x, y, kernel='linear'):
+    rng = np.random.default_rng(exp_configs.seed) if exp_configs.set_seed else np.random.default_rng()
 
     # Need x and y to be of same size. Sample points from the larger array, to have equal number of datapoints in both.
     if x.shape[0] > y.shape[0]:
-        x = x[np.random.choice(x.shape[0], y.shape[0], replace=False), :]
+        x = x[rng.choice(x.shape[0], y.shape[0], replace=False), :]
     if x.shape[0] < y.shape[0]:
-        y = y[np.random.choice(y.shape[0], x.shape[0], replace=False), :]
+        y = y[rng.choice(y.shape[0], x.shape[0], replace=False), :]
 
     # Cast to torch tensors
     x = torch.tensor(x) if type(x) == np.ndarray else x

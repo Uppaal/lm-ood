@@ -2,13 +2,12 @@ import gc
 import os
 
 import nvsmi
-import torch
 import socket
 import random
 import logging
 import numpy as np
 from pynvml import *
-from src.utils.configs import Config
+from utils.configs import Config
 
 
 # Set logger
@@ -20,23 +19,51 @@ logger.setLevel(logging.INFO)
 class Map(object): pass
 
 
+def set_seed(args):
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(args.seed)
+        torch.cuda.manual_seed_all(args.seed)
+
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    try:
+        torch.use_deterministic_algorithms(True, warn_only=True)
+    except TypeError:
+        torch.use_deterministic_algorithms(True)
+
+
 exp_configs = Config()
+import torch
+if exp_configs.set_seed:
+    set_seed(exp_configs)
 exp_configs.values()
 
-os.environ["CUDA_VISIBLE_DEVICES"] = str(exp_configs.CUDA_VISIBLE_DEVICES)
 logger.info(f'Host: {socket.gethostname()}')
 free_gpus = [x for x in nvsmi.get_available_gpus()]
 logger.info(f'Free GPUs: {[x.id for x in free_gpus]}')
-logger.info(f'GPU in use: {torch.cuda.get_device_name(torch.cuda.current_device())} (ID: {os.environ["CUDA_VISIBLE_DEVICES"]}')
+if torch.cuda.is_available():
+    visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "all")
+    gpu_name = torch.cuda.get_device_name(torch.cuda.current_device())
+    logger.info(f'GPU in use: {gpu_name} (ID: {visible_devices})')
+else:
+    logger.info('GPU in use: CPU')
 
 
 # Save memory
 gc.collect()
-torch.cuda.empty_cache()
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
 
 
 # Util for GPU utilization
 def print_gpu_utilization():
+    if not torch.cuda.is_available():
+        print("CUDA is not available.")
+        return
     nvmlInit()
     handle = nvmlDeviceGetHandleByIndex(0)
     info = nvmlDeviceGetMemoryInfo(handle)
@@ -45,14 +72,6 @@ def print_summary(result):
     print(f"Time: {result.metrics['train_runtime']:.2f}")
     print(f"Samples/second: {result.metrics['train_samples_per_second']:.2f}")
     print_gpu_utilization()
-
-
-def set_seed(args):
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    if args.n_gpu > 0 and torch.cuda.is_available():
-        torch.cuda.manual_seed_all(args.seed)
 
 
 def collate_fn(batch):

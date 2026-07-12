@@ -16,7 +16,7 @@ def compute_metrics(pred):
     }
 
 
-def get_trainer_finetuning(train_dataset, val_dataset, model, tokenizer, num_epochs, batch_size, output_dir):
+def get_trainer_finetuning(train_dataset, val_dataset, model, tokenizer, num_epochs, batch_size, output_dir, seed):
 
     training_args = TrainingArguments(
         output_dir=output_dir,
@@ -29,6 +29,8 @@ def get_trainer_finetuning(train_dataset, val_dataset, model, tokenizer, num_epo
         num_train_epochs=num_epochs,
         weight_decay=0.01,
         save_total_limit=3,
+        seed=seed,
+        data_seed=seed,
     )
 
     trainer = Trainer(
@@ -43,7 +45,7 @@ def get_trainer_finetuning(train_dataset, val_dataset, model, tokenizer, num_epo
     return trainer
 
 
-def get_trainer_pretraining(dataset, model, tokenizer, num_epochs, batch_size, output_dir):
+def get_trainer_pretraining(dataset, model, tokenizer, num_epochs, batch_size, output_dir, seed):
 
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, mlm=True, mlm_probability=0.15)
@@ -56,7 +58,8 @@ def get_trainer_pretraining(dataset, model, tokenizer, num_epochs, batch_size, o
         per_device_train_batch_size=batch_size, # Paper uses overall batch size of 256 when < 5k DPs
         save_steps=5000,
         save_total_limit=2,
-        seed=1,
+        seed=seed,
+        data_seed=seed,
     )
 
     trainer = Trainer(
